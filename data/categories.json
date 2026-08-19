@@ -1,0 +1,65 @@
+[
+    {
+        "id": "archive",
+        "name": "Archive",
+        "description": "Archive formats for file compression and storage",
+        "icon": "fas fa-archive",
+        "color": "#6366f1"
+    },
+    {
+        "id": "audio",
+        "name": "Audio",
+        "description": "Digital audio formats for music and sound",
+        "icon": "fas fa-music",
+        "color": "#ec4899"
+    },
+    {
+        "id": "data",
+        "name": "Data",
+        "description": "Data formats and information exchange",
+        "icon": "fas fa-database",
+        "color": "#14b8a6"
+    },
+    {
+        "id": "document",
+        "name": "Document",
+        "description": "Document formats for text, presentations, and spreadsheets",
+        "icon": "fas fa-file-alt",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "font",
+        "name": "Font",
+        "description": "Font formats for typography and design",
+        "icon": "fas fa-font",
+        "color": "#8b5cf6"
+    },
+    {
+        "id": "image",
+        "name": "Image",
+        "description": "Digital image, photo, and graphics formats",
+        "icon": "fas fa-image",
+        "color": "#f59e0b"
+    },
+    {
+        "id": "video",
+        "name": "Video",
+        "description": "Video, film, and multimedia formats",
+        "icon": "fas fa-video",
+        "color": "#ef4444"
+    },
+    {
+        "id": "code",
+        "name": "Programming",
+        "description": "Programming languages and source code",
+        "icon": "fas fa-code",
+        "color": "#22c55e"
+    },
+    {
+        "id": "executable",
+        "name": "Executable",
+        "description": "Programs, installers, and runnable applications",
+        "icon": "fas fa-cog",
+        "color": "#f97316"
+    }
+]

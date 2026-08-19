@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileExt Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0f1117; color: #e1e4e8; min-height: 100vh; }
+
+        .login-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .login-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 40px; width: 100%; max-width: 480px; }
+        .login-box h1 { font-size: 1.5rem; margin-bottom: 8px; color: #fff; }
+        .login-box p { color: #8b949e; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.6; }
+
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 240px; background: #161b22; border-right: 1px solid #30363d; padding: 24px 0; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100; }
+        .sidebar-brand { padding: 0 20px 24px; border-bottom: 1px solid #30363d; margin-bottom: 16px; }
+        .sidebar-brand h2 { font-size: 1.2rem; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .sidebar-brand span { color: #58a6ff; }
+        .sidebar nav a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #8b949e; text-decoration: none; font-size: 0.9rem; transition: all 0.15s; }
+        .sidebar nav a:hover { background: #1c2128; color: #e1e4e8; }
+        .sidebar nav a.active { background: #1c2128; color: #58a6ff; border-right: 3px solid #58a6ff; }
+        .sidebar nav a i { width: 20px; text-align: center; }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid #30363d; position: absolute; bottom: 0; width: 100%; }
+        .main { flex: 1; margin-left: 240px; padding: 32px; }
+
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .topbar h1 { font-size: 1.5rem; color: #fff; }
+
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; font-family: inherit; }
+        .btn-primary { background: #238636; color: #fff; } .btn-primary:hover { background: #2ea043; }
+        .btn-danger { background: #da3633; color: #fff; } .btn-danger:hover { background: #f85149; }
+        .btn-secondary { background: #30363d; color: #e1e4e8; } .btn-secondary:hover { background: #3d444d; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 0.875rem; font-weight: 600; color: #c9d1d9; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #e1e4e8; font-size: 0.9rem; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15); }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-header h2 { font-size: 1.1rem; color: #fff; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; }
+        .stat-card .stat-num { font-size: 2rem; font-weight: 800; color: #58a6ff; }
+        .stat-card .stat-label { color: #8b949e; font-size: 0.85rem; margin-top: 4px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        table th, table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #30363d; font-size: 0.9rem; }
+        table th { color: #8b949e; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        table td { color: #c9d1d9; }
+        table tr:hover td { background: #1c2128; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-cat { background: rgba(88, 166, 255, 0.15); color: #58a6ff; }
+
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
+        .alert-success { background: rgba(35, 134, 54, 0.2); border: 1px solid #238636; color: #3fb950; }
+        .alert-error { background: rgba(218, 54, 51, 0.2); border: 1px solid #da3633; color: #f85149; }
+        .alert-info { background: rgba(88, 166, 255, 0.15); border: 1px solid #1f6feb; color: #58a6ff; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #8b949e; }
+        .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; color: #30363d; }
+
+        .actions { display: flex; gap: 8px; }
+        .back-link { color: #58a6ff; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; }
+        .back-link:hover { text-decoration: underline; }
+
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 17, 23, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; gap: 16px; }
+        .loading-overlay .spinner { width: 40px; height: 40px; border: 4px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-overlay p { color: #8b949e; font-size: 0.9rem; }
+
+        .token-info { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-top: 16px; }
+        .token-info code { color: #58a6ff; font-size: 0.85rem; }
+        .token-info ol { margin: 8px 0 0 20px; color: #8b949e; font-size: 0.85rem; line-height: 1.8; }
+
+        .commit-log { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; background: #0d1117; border-radius: 8px; padding: 12px; color: #8b949e; }
+        .commit-log .success { color: #3fb950; }
+        .commit-log .error { color: #f85149; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p id="loadingText">Loading...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-wrapper">
+        <div class="login-box">
+            <h1><i class="fas fa-file-code" style="color: #58a6ff;"></i> FileExt Admin</h1>
+            <p>Connect to your GitHub repository to manage content. No server required — everything runs in your browser.</p>
+            <div id="loginAlert"></div>
+            <div class="form-group">
+                <label>GitHub Personal Access Token</label>
+                <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Repository</label>
+                <input type="text" id="repoInput" value="wansgit/wansgit.github.io" placeholder="username/repo">
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> Connect to GitHub
+            </button>
+            <div class="token-info">
+                <strong style="color:#c9d1d9;font-size:0.85rem;">How to get a token:</strong>
+                <ol>
+                    <li>Go to <code>github.com/settings/tokens</code></li>
+                    <li>Click <strong>Generate new token (classic)</strong></li>
+                    <li>Give it a name (e.g. "FileExt Admin")</li>
+                    <li>Select scope: <strong>repo</strong> (full control)</li>
+                    <li>Click Generate and copy the token</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="layout hidden">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2><i class="fas fa-file-code"></i> <span>FileExt</span></h2>
+            </div>
+            <nav>
+                <a href="#" onclick="showPage('dashboard')" id="nav-dashboard" class="active"><i class="fas fa-th-large"></i> Dashboard</a>
+                <a href="#" onclick="showPage('extensions')" id="nav-extensions"><i class="fas fa-puzzle-piece"></i> Extensions</a>
+                <a href="#" onclick="showPage('blog')" id="nav-blog"><i class="fas fa-newspaper"></i> Blog</a>
+                <a href="#" onclick="showPage('categories')" id="nav-categories"><i class="fas fa-folder"></i> Categories</a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="https://wansgit.github.io/" target="_blank" style="color:#8b949e;text-decoration:none;font-size:0.85rem;display:flex;align-items:center;gap:6px;"><i class="fas fa-external-link-alt"></i> View Site</a>
+                <a href="#" onclick="logout()" style="color:#f85149;text-decoration:none;font-size:0.85rem;display:flex;align-items:center;gap:6px;margin-top:8px;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <main class="main">
+            <!-- Dashboard -->
+            <div id="page-dashboard">
+                <div class="topbar">
+                    <h1>Dashboard</h1>
+                    <button class="btn btn-secondary" onclick="pullData()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+                <div id="dashboardAlert"></div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-num" id="statExt">0</div><div class="stat-label">Extensions</div></div>
+                    <div class="stat-card"><div class="stat-num" id="statBlog">0</div><div class="stat-label">Blog Posts</div></div>
+                    <div class="stat-card"><div class="stat-num" id="statCat">0</div><div class="stat-label">Categories</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h2>Recent Activity</h2></div>
+                    <div id="commitLog" class="commit-log"><span style="color:#8b949e;">No commits yet. Make a change to see activity here.</span></div>
+                </div>
+            </div>
+
+            <!-- Extensions -->
+            <div id="page-extensions" class="hidden">
+                <div class="topbar">
+                    <h1>Extensions (<span id="extCount">0</span>)</h1>
+                    <button class="btn btn-primary" onclick="showExtensionForm()"><i class="fas fa-plus"></i> Add Extension</button>
+                </div>
+                <div class="card">
+                    <div style="display:flex;gap:12px;">
+                        <input type="text" id="extSearch" placeholder="Search extensions..." onkeyup="filterExtensions()" style="flex:1;padding:10px 12px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e1e4e8;font-size:0.9rem;">
+                        <select id="extCatFilter" onchange="filterExtensions()" style="padding:10px 12px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e1e4e8;font-size:0.9rem;">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card" style="padding:0;overflow:hidden;">
+                    <table>
+                        <thead><tr><th>Extension</th><th>Name</th><th>Category</th><th>Actions</th></tr></thead>
+                        <tbody id="extTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Extension Form -->
+            <div id="page-extension-form" class="hidden">
+                <a href="#" onclick="showPage('extensions')" class="back-link"><i class="fas fa-arrow-left"></i> Back to Extensions</a>
+                <div class="topbar"><h1 id="extFormTitle">Add Extension</h1></div>
+                <form id="extensionForm" onsubmit="saveExtension(event)">
+                    <input type="hidden" id="extFormId">
+                    <div class="card">
+                        <h2 style="font-size:1rem;margin-bottom:16px;color:#fff;">Basic Information</h2>
+                        <div class="form-row">
+                            <div class="form-group"><label>Extension (e.g. .pdf)</label><input type="text" id="extFormExt" required></div>
+                            <div class="form-group"><label>Name</label><input type="text" id="extFormName" required></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Category</label><select id="extFormCat" required></select></div>
+                            <div class="form-group"><label>Category Name</label><input type="text" id="extFormCatName"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>File Type</label><input type="text" id="extFormFileType"></div>
+                            <div class="form-group"><label>Status</label><select id="extFormStatus"><option>Active</option><option>Legacy</option><option>Proprietary</option><option>Emerging</option></select></div>
+                        </div>
+                        <div class="form-group"><label>Description</label><textarea id="extFormDesc" rows="3"></textarea></div>
+                        <div class="form-group"><label><input type="checkbox" id="extFormPopular"> Mark as Popular</label></div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size:1rem;margin-bottom:16px;color:#fff;">Developer Info</h2>
+                        <div class="form-row">
+                            <div class="form-group"><label>Developer</label><input type="text" id="extFormDeveloper"></div>
+                            <div class="form-group"><label>Developed By</label><input type="text" id="extFormDevelopedBy"></div>
+                        </div>
+                        <div class="form-group"><label>Website</label><input type="url" id="extFormWebsite"></div>
+                        <div class="form-group"><label>Icon (FA class)</label><input type="text" id="extFormIcon" placeholder="fas fa-file-pdf"></div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size:1rem;margin-bottom:16px;color:#fff;">Technical Details</h2>
+                        <div class="form-group"><label>MIME Types (one per line)</label><textarea id="extFormMime" rows="3"></textarea></div>
+                        <div class="form-group"><label>Details (one per line)</label><textarea id="extFormDetails" rows="4"></textarea></div>
+                        <div class="form-group"><label>Default Software (one per line)</label><textarea id="extFormDefaultSw" rows="3"></textarea></div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size:1rem;margin-bottom:16px;color:#fff;">Software & Tools</h2>
+                        <div class="form-group"><label>Free Software (one per line)</label><textarea id="extFormFreeSw" rows="3"></textarea></div>
+                        <div class="form-group"><label>Paid Software (one per line)</label><textarea id="extFormPaidSw" rows="3"></textarea></div>
+                        <div class="form-group"><label>Online Tools (one per line)</label><textarea id="extFormOnline" rows="3"></textarea></div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size:1rem;margin-bottom:16px;color:#fff;">Related & Meta</h2>
+                        <div class="form-row">
+                            <div class="form-group"><label>Related Extensions (one per line)</label><textarea id="extFormRelated" rows="3"></textarea></div>
+                            <div class="form-group"><label>Compatible Formats (one per line)</label><textarea id="extFormCompat" rows="3"></textarea></div>
+                        </div>
+                        <div class="form-group"><label>Tags (one per line)</label><textarea id="extFormTags" rows="3"></textarea></div>
+                    </div>
+                    <div style="display:flex;gap:12px;">
+                        <button type="submit" class="btn btn-primary" style="padding:12px 24px;"><i class="fas fa-save"></i> Save & Push</button>
+                        <a href="#" onclick="showPage('extensions')" class="btn btn-secondary" style="padding:12px 24px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Blog -->
+            <div id="page-blog" class="hidden">
+                <div class="topbar">
+                    <h1>Blog Posts (<span id="blogCount">0</span>)</h1>
+                    <button class="btn btn-primary" onclick="showBlogForm()"><i class="fas fa-plus"></i> Add Post</button>
+                </div>
+                <div class="card" style="padding:0;overflow:hidden;">
+                    <table>
+                        <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="blogTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Blog Form -->
+            <div id="page-blog-form" class="hidden">
+                <a href="#" onclick="showPage('blog')" class="back-link"><i class="fas fa-arrow-left"></i> Back to Blog</a>
+                <div class="topbar"><h1 id="blogFormTitle">New Post</h1></div>
+                <form id="blogForm" onsubmit="saveBlog(event)">
+                    <input type="hidden" id="blogFormId">
+                    <div class="card">
+                        <div class="form-group"><label>Title</label><input type="text" id="blogFormTitle2" required></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Slug</label><input type="text" id="blogFormSlug" placeholder="auto-generated if empty"></div>
+                            <div class="form-group"><label>Category</label><input type="text" id="blogFormCat" list="blogCatList"><datalist id="blogCatList"><option value="Guide"><option value="Comparison"><option value="Tutorial"><option value="Knowledge"></datalist></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Category Slug</label><input type="text" id="blogFormCatSlug" placeholder="guide"></div>
+                            <div class="form-group"><label>Author</label><input type="text" id="blogFormAuthor" value="Adi Pratama"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Date</label><input type="date" id="blogFormDate"></div>
+                            <div class="form-group"><label>Read Time</label><input type="text" id="blogFormReadTime" placeholder="7 min read"></div>
+                        </div>
+                        <div class="form-group"><label>Excerpt</label><textarea id="blogFormExcerpt" rows="2"></textarea></div>
+                        <div class="form-group"><label>Tags (comma separated)</label><input type="text" id="blogFormTags"></div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size:1rem;margin-bottom:16px;color:#fff;">Content (HTML)</h2>
+                        <div class="form-group"><textarea id="blogFormContent" rows="20" style="min-height:400px;font-family:monospace;font-size:0.85rem;"></textarea></div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size:1rem;margin-bottom:16px;color:#fff;">SEO</h2>
+                        <div class="form-group"><label>Meta Description</label><textarea id="blogFormMetaDesc" rows="2"></textarea></div>
+                        <div class="form-group"><label>Meta Keywords</label><input type="text" id="blogFormMetaKw"></div>
+                    </div>
+                    <div style="display:flex;gap:12px;">
+                        <button type="submit" class="btn btn-primary" style="padding:12px 24px;"><i class="fas fa-save"></i> Save & Push</button>
+                        <a href="#" onclick="showPage('blog')" class="btn btn-secondary" style="padding:12px 24px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Categories -->
+            <div id="page-categories" class="hidden">
+                <div class="topbar">
+                    <h1>Categories (<span id="catCount">0</span>)</h1>
+                    <button class="btn btn-primary" onclick="showCategoryForm()"><i class="fas fa-plus"></i> Add Category</button>
+                </div>
+                <div class="card" style="padding:0;overflow:hidden;">
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Icon</th><th>Extensions</th><th>Actions</th></tr></thead>
+                        <tbody id="catTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Category Form -->
+            <div id="page-category-form" class="hidden">
+                <a href="#" onclick="showPage('categories')" class="back-link"><i class="fas fa-arrow-left"></i> Back to Categories</a>
+                <div class="topbar"><h1 id="catFormTitle">Add Category</h1></div>
+                <form id="categoryForm" onsubmit="saveCategory(event)">
+                    <div class="card">
+                        <div class="form-row">
+                            <div class="form-group"><label>ID (lowercase)</label><input type="text" id="catFormId" required placeholder="document"></div>
+                            <div class="form-group"><label>Name</label><input type="text" id="catFormName" required></div>
+                        </div>
+                        <div class="form-group"><label>Description</label><textarea id="catFormDesc" rows="2"></textarea></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Icon (FA class)</label><input type="text" id="catFormIcon" placeholder="fas fa-file-alt"></div>
+                            <div class="form-group"><label>Color</label><input type="color" id="catFormColor" value="#58a6ff" style="height:42px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;">
+                        <button type="submit" class="btn btn-primary" style="padding:12px 24px;"><i class="fas fa-save"></i> Save & Push</button>
+                        <a href="#" onclick="showPage('categories')" class="btn btn-secondary" style="padding:12px 24px;">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+<script>
+// ====== STATE ======
+let GH_TOKEN = '';
+let GH_REPO = '';
+let GH_OWNER = '';
+let repoData = { extensions: [], categories: [], blog: [] };
+let fileSHAs = {};
+
+// ====== GITHUB API ======
+const API = 'https://api.github.com';
+
+async function ghFetch(path, opts = {}) {
+    const resp = await fetch(API + path, {
+        ...opts,
+        headers: {
+            'Authorization': 'token ' + GH_TOKEN,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+            ...(opts.headers || {})
+        }
+    });
+    if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.message || `GitHub API error ${resp.status}`);
+    }
+    return resp.status === 204 ? null : resp.json();
+}
+
+async function getFile(path) {
+    try {
+        const data = await ghFetch(`/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`);
+        return { content: atob(data.content.replace(/\n/g, '')), sha: data.sha };
+    } catch (e) {
+        return null;
+    }
+}
+
+async function putFile(path, content, message, sha) {
+    const body = { message, content: btoa(unescape(encodeURIComponent(content))), branch: 'main' };
+    if (sha) body.sha = sha;
+    return ghFetch(`/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+        method: 'PUT',
+        body: JSON.stringify(body)
+    });
+}
+
+// ====== DATA ======
+async function pullData() {
+    showLoading('Loading data from GitHub...');
+    try {
+        var extFile = await getFile('data/extensions.json');
+        var catFile = await getFile('data/categories.json');
+        var blogFile = await getFile('data/blog.json');
+
+        if (extFile) {
+            var parsed = JSON.parse(extFile.content);
+            if (Array.isArray(parsed)) repoData.extensions = parsed;
+            fileSHAs['extensions'] = extFile.sha;
+        }
+        if (catFile) {
+            var parsed = JSON.parse(catFile.content);
+            if (Array.isArray(parsed)) repoData.categories = parsed;
+            fileSHAs['categories'] = catFile.sha;
+        }
+        if (blogFile) {
+            var parsed = JSON.parse(blogFile.content);
+            if (Array.isArray(parsed)) repoData.blog = parsed;
+            fileSHAs['blog'] = blogFile.sha;
+        }
+
+        updateStats();
+        renderExtensions();
+        renderBlog();
+        renderCategories();
+        populateCategoryDropdowns();
+        hideLoading();
+        showAlert('dashboardAlert', 'Data loaded from GitHub successfully. ' + repoData.extensions.length + ' extensions, ' + repoData.blog.length + ' blog posts, ' + repoData.categories.length + ' categories.', 'success');
+    } catch (e) {
+        hideLoading();
+        showAlert('dashboardAlert', 'Error loading data: ' + e.message, 'error');
+    }
+}
+
+function generateDataJS() {
+    const extArr = repoData.extensions.map(ext => {
+        const obj = {
+            extension: ext.extension,
+            name: ext.name,
+            category: ext.category,
+            categoryName: ext.categoryName || ext.category,
+            description: ext.description || '',
+            details: Array.isArray(ext.details) ? ext.details.join(' ') : (ext.details || ''),
+            mimeTypes: ext.mimeTypes || [],
+            programs: [],
+            alternatives: ext.compatibleFormats || ext.alternatives || [],
+            developed: ext.developedBy || ext.developer || '',
+            developer: ext.developer || ext.developedBy || '',
+            popularity: ext.popularity || 0
+        };
+        (ext.freeSoftware || []).forEach(name => { obj.programs.push({ name, platform: '', free: true }); });
+        (ext.paidSoftware || []).forEach(name => { obj.programs.push({ name, platform: '', free: false }); });
+        return obj;
+    });
+    extArr.sort((a, b) => b.popularity - a.popularity);
+
+    const catObj = {};
+    repoData.categories.forEach(c => {
+        catObj[c.id] = { name: c.name, icon: c.icon || 'fas fa-folder', description: c.description || '', color: c.color || '#58a6ff' };
+    });
+
+    let js = '// File Extension Data - Auto-generated from JSON\n';
+    js += '// DO NOT EDIT MANUALLY\n';
+    js += '// Generated: ' + new Date().toISOString() + '\n\n';
+    js += 'const fileExtensions = ' + JSON.stringify(extArr, null, 4) + ';\n\n';
+    js += 'const categories = ' + JSON.stringify(catObj, null, 4) + ';\n';
+    return js;
+}
+
+async function pushAll(message) {
+    showLoading('Pushing to GitHub...');
+    var hasError = false;
+    try {
+        var extJson = JSON.stringify(repoData.extensions, null, 4);
+        var catJson = JSON.stringify(repoData.categories, null, 4);
+        var blogJson = JSON.stringify(repoData.blog, null, 4);
+        var dataJs = generateDataJS();
+
+        // Fetch latest SHAs before pushing
+        var latestExt = await getFile('data/extensions.json');
+        var latestCat = await getFile('data/categories.json');
+        var latestBlog = await getFile('data/blog.json');
+        var latestDataJs = await getFile('js/data.js');
+
+        // Push each file independently — don't let one failure block others
+        var files = [
+            { path: 'data/extensions.json', content: extJson, sha: latestExt ? latestExt.sha : fileSHAs['extensions'], label: 'extensions' },
+            { path: 'data/categories.json', content: catJson, sha: latestCat ? latestCat.sha : fileSHAs['categories'], label: 'categories' },
+            { path: 'data/blog.json', content: blogJson, sha: latestBlog ? latestBlog.sha : fileSHAs['blog'], label: 'blog' },
+            { path: 'js/data.js', content: dataJs, sha: latestDataJs ? latestDataJs.sha : null, label: 'data.js' }
+        ];
+
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            try {
+                var result = await putFile(f.path, f.content, message, f.sha);
+                if (result && result.content) fileSHAs[f.label] = result.content.sha;
+            } catch (err) {
+                console.error('Failed to push ' + f.path + ': ' + err.message);
+                hasError = true;
+            }
+        }
+
+        if (hasError) {
+            addCommitLog(message + ' (partial - some files failed)', false);
+        } else {
+            addCommitLog(message, true);
+        }
+        hideLoading();
+    } catch (e) {
+        addCommitLog(message + ' FAILED: ' + e.message, false);
+        hideLoading();
+        throw e;
+    }
+}
+
+// ====== RENDER ======
+function updateStats() {
+    document.getElementById('statExt').textContent = repoData.extensions.length;
+    document.getElementById('statBlog').textContent = repoData.blog.length;
+    document.getElementById('statCat').textContent = repoData.categories.length;
+    document.getElementById('extCount').textContent = repoData.extensions.length;
+    document.getElementById('blogCount').textContent = repoData.blog.length;
+    document.getElementById('catCount').textContent = repoData.categories.length;
+}
+
+function populateCategoryDropdowns() {
+    const opts = repoData.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    document.getElementById('extCatFilter').innerHTML = '<option value="">All Categories</option>' + opts;
+    document.getElementById('extFormCat').innerHTML = '<option value="">Select</option>' + opts;
+}
+
+function renderExtensions() {
+    const search = document.getElementById('extSearch').value.toLowerCase();
+    const cat = document.getElementById('extCatFilter').value;
+    let list = repoData.extensions;
+    if (search) list = list.filter(e => e.extension.toLowerCase().includes(search) || e.name.toLowerCase().includes(search));
+    if (cat) list = list.filter(e => e.category === cat);
+
+    document.getElementById('extTableBody').innerHTML = list.length === 0
+        ? '<tr><td colspan="4" style="text-align:center;padding:40px;color:#8b949e;">No extensions found.</td></tr>'
+        : list.map(e => `<tr>
+            <td><strong style="color:#58a6ff;">${esc(e.extension)}</strong></td>
+            <td>${esc(e.name)}</td>
+            <td><span class="badge badge-cat">${esc(e.category)}</span></td>
+            <td><div class="actions">
+                <button class="btn btn-sm btn-secondary" data-action="edit-ext" data-id="${esc(e.id)}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" data-action="delete-ext" data-id="${esc(e.id)}"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`).join('');
+}
+
+function renderBlog() {
+    document.getElementById('blogTableBody').innerHTML = repoData.blog.length === 0
+        ? '<tr><td colspan="4" style="text-align:center;padding:40px;color:#8b949e;">No blog posts yet.</td></tr>'
+        : repoData.blog.map(p => `<tr>
+            <td><strong>${esc(p.title)}</strong></td>
+            <td><span class="badge badge-cat">${esc(p.category || '-')}</span></td>
+            <td>${esc(p.date || '-')}</td>
+            <td><div class="actions">
+                <button class="btn btn-sm btn-secondary" data-action="edit-blog" data-id="${esc(p.id)}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" data-action="delete-blog" data-id="${esc(p.id)}"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`).join('');
+}
+
+function renderCategories() {
+    const catCounts = {};
+    repoData.extensions.forEach(e => { catCounts[e.category] = (catCounts[e.category] || 0) + 1; });
+
+    document.getElementById('catTableBody').innerHTML = repoData.categories.length === 0
+        ? '<tr><td colspan="5" style="text-align:center;padding:40px;color:#8b949e;">No categories yet.</td></tr>'
+        : repoData.categories.map(c => `<tr>
+            <td><code style="color:#8b949e;">${esc(c.id)}</code></td>
+            <td><strong>${esc(c.name)}</strong></td>
+            <td><i class="${esc(c.icon || '')}" style="color:#58a6ff;"></i> <span style="color:#8b949e;font-size:0.8rem;">${esc(c.icon || '')}</span></td>
+            <td><span class="badge badge-cat">${catCounts[c.id] || 0} ext</span></td>
+            <td><div class="actions">
+                <button class="btn btn-sm btn-secondary" data-action="edit-cat" data-id="${esc(c.id)}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" data-action="delete-cat" data-id="${esc(c.id)}"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`).join('');
+}
+
+function filterExtensions() { renderExtensions(); }
+
+// ====== EXTENSION CRUD ======
+function showExtensionForm(ext) {
+    showPage('extension-form');
+    document.getElementById('extFormTitle').textContent = ext ? 'Edit Extension' : 'Add Extension';
+    document.getElementById('extFormId').value = ext ? ext.id : genId();
+    document.getElementById('extFormExt').value = ext ? ext.extension : '';
+    document.getElementById('extFormName').value = ext ? ext.name : '';
+    document.getElementById('extFormCat').value = ext ? ext.category : '';
+    document.getElementById('extFormCatName').value = ext ? (ext.categoryName || '') : '';
+    document.getElementById('extFormFileType').value = ext ? (ext.fileType || '') : '';
+    document.getElementById('extFormStatus').value = ext ? (ext.status || 'Active') : 'Active';
+    document.getElementById('extFormDesc').value = ext ? (ext.description || '') : '';
+    document.getElementById('extFormPopular').checked = ext ? !!ext.popular : false;
+    document.getElementById('extFormDeveloper').value = ext ? (ext.developer || '') : '';
+    document.getElementById('extFormDevelopedBy').value = ext ? (ext.developedBy || '') : '';
+    document.getElementById('extFormWebsite').value = ext ? (ext.website || '') : '';
+    document.getElementById('extFormIcon').value = ext ? (ext.icon || '') : '';
+    document.getElementById('extFormMime').value = ext ? (ext.mimeTypes || []).join('\n') : '';
+    document.getElementById('extFormDetails').value = ext ? (Array.isArray(ext.details) ? ext.details.join('\n') : (ext.details || '')) : '';
+    document.getElementById('extFormDefaultSw').value = ext ? (ext.defaultSoftware || []).join('\n') : '';
+    document.getElementById('extFormFreeSw').value = ext ? (ext.freeSoftware || []).join('\n') : '';
+    document.getElementById('extFormPaidSw').value = ext ? (ext.paidSoftware || []).join('\n') : '';
+    document.getElementById('extFormOnline').value = ext ? (ext.onlineTools || []).join('\n') : '';
+    document.getElementById('extFormRelated').value = ext ? (ext.relatedExtensions || []).join('\n') : '';
+    document.getElementById('extFormCompat').value = ext ? (ext.compatibleFormats || []).join('\n') : '';
+    document.getElementById('extFormTags').value = ext ? (ext.tags || []).join('\n') : '';
+}
+
+function editExtension(id) {
+    const ext = repoData.extensions.find(e => e.id === id);
+    if (ext) showExtensionForm(ext);
+}
+
+async function saveExtension(e) {
+    e.preventDefault();
+    const id = document.getElementById('extFormId').value;
+    const data = {
+        id,
+        extension: document.getElementById('extFormExt').value.trim(),
+        name: document.getElementById('extFormName').value.trim(),
+        category: document.getElementById('extFormCat').value,
+        categoryName: document.getElementById('extFormCatName').value.trim(),
+        fileType: document.getElementById('extFormFileType').value.trim(),
+        status: document.getElementById('extFormStatus').value,
+        description: document.getElementById('extFormDesc').value.trim(),
+        popular: document.getElementById('extFormPopular').checked ? 1 : 0,
+        developer: document.getElementById('extFormDeveloper').value.trim(),
+        developedBy: document.getElementById('extFormDevelopedBy').value.trim(),
+        website: document.getElementById('extFormWebsite').value.trim(),
+        icon: document.getElementById('extFormIcon').value.trim(),
+        mimeTypes: lines('extFormMime'),
+        details: lines('extFormDetails'),
+        defaultSoftware: lines('extFormDefaultSw'),
+        freeSoftware: lines('extFormFreeSw'),
+        paidSoftware: lines('extFormPaidSw'),
+        onlineTools: lines('extFormOnline'),
+        relatedExtensions: lines('extFormRelated'),
+        compatibleFormats: lines('extFormCompat'),
+        tags: lines('extFormTags')
+    };
+
+    const idx = repoData.extensions.findIndex(e => e.id === id);
+    if (idx >= 0) repoData.extensions[idx] = data;
+    else repoData.extensions.push(data);
+
+    try {
+        await pushAll(`${idx >= 0 ? 'Update' : 'Add'} extension ${data.extension}`);
+        showPage('extensions');
+        renderExtensions();
+        updateStats();
+        showAlert('dashboardAlert', `Extension ${data.extension} saved successfully.`, 'success');
+    } catch (e) {
+        showAlert('dashboardAlert', 'Error: ' + e.message, 'error');
+    }
+}
+
+async function deleteExtension(id) {
+    const ext = repoData.extensions.find(e => e.id === id);
+    if (!confirm(`Delete ${ext ? ext.extension : 'this extension'}?`)) return;
+    repoData.extensions = repoData.extensions.filter(e => e.id !== id);
+    try {
+        await pushAll(`Delete extension ${ext ? ext.extension : ''}`);
+        renderExtensions();
+        updateStats();
+    } catch (e) {
+        showAlert('dashboardAlert', 'Error: ' + e.message, 'error');
+    }
+}
+
+// ====== BLOG CRUD ======
+function showBlogForm(post) {
+    showPage('blog-form');
+    document.getElementById('blogFormTitle').textContent = post ? 'Edit Post' : 'New Post';
+    document.getElementById('blogFormId').value = post ? post.id : genId();
+    document.getElementById('blogFormTitle2').value = post ? post.title : '';
+    document.getElementById('blogFormSlug').value = post ? (post.slug || '') : '';
+    document.getElementById('blogFormCat').value = post ? (post.category || '') : '';
+    document.getElementById('blogFormCatSlug').value = post ? (post.categorySlug || '') : '';
+    document.getElementById('blogFormAuthor').value = post ? (post.author || 'Adi Pratama') : 'Adi Pratama';
+    document.getElementById('blogFormDate').value = post ? post.date : new Date().toISOString().split('T')[0];
+    document.getElementById('blogFormReadTime').value = post ? (post.readTime || '') : '';
+    document.getElementById('blogFormExcerpt').value = post ? (post.excerpt || '') : '';
+    document.getElementById('blogFormTags').value = post ? (post.tags || []).join(', ') : '';
+    document.getElementById('blogFormContent').value = post ? (post.content || '') : '';
+    document.getElementById('blogFormMetaDesc').value = post ? (post.metaDescription || '') : '';
+    document.getElementById('blogFormMetaKw').value = post ? (post.metaKeywords || '') : '';
+}
+
+function editBlog(id) {
+    const post = repoData.blog.find(p => p.id === id);
+    if (post) showBlogForm(post);
+}
+
+async function saveBlog(e) {
+    e.preventDefault();
+    const id = document.getElementById('blogFormId').value;
+    let slug = document.getElementById('blogFormSlug').value.trim();
+    const title = document.getElementById('blogFormTitle2').value.trim();
+    if (!slug) slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    const data = {
+        id, title, slug,
+        category: document.getElementById('blogFormCat').value.trim(),
+        categorySlug: document.getElementById('blogFormCatSlug').value.trim(),
+        author: document.getElementById('blogFormAuthor').value.trim(),
+        date: document.getElementById('blogFormDate').value,
+        readTime: document.getElementById('blogFormReadTime').value.trim(),
+        excerpt: document.getElementById('blogFormExcerpt').value.trim(),
+        tags: document.getElementById('blogFormTags').value.split(',').map(s => s.trim()).filter(Boolean),
+        content: document.getElementById('blogFormContent').value,
+        metaDescription: document.getElementById('blogFormMetaDesc').value.trim(),
+        metaKeywords: document.getElementById('blogFormMetaKw').value.trim()
+    };
+
+    const idx = repoData.blog.findIndex(p => p.id === id);
+    if (idx >= 0) repoData.blog[idx] = data;
+    else repoData.blog.push(data);
+
+    try {
+        await pushAll(`${idx >= 0 ? 'Update' : 'Add'} blog post: ${data.title}`);
+        showPage('blog');
+        renderBlog();
+        updateStats();
+    } catch (e) {
+        showAlert('dashboardAlert', 'Error: ' + e.message, 'error');
+    }
+}
+
+async function deleteBlog(id) {
+    const post = repoData.blog.find(p => p.id === id);
+    if (!confirm(`Delete "${post ? post.title : 'this post'}"?`)) return;
+    repoData.blog = repoData.blog.filter(p => p.id !== id);
+    try {
+        await pushAll(`Delete blog post: ${post ? post.title : ''}`);
+        renderBlog();
+        updateStats();
+    } catch (e) {
+        showAlert('dashboardAlert', 'Error: ' + e.message, 'error');
+    }
+}
+
+// ====== CATEGORY CRUD ======
+function showCategoryForm(cat) {
+    showPage('category-form');
+    document.getElementById('catFormTitle').textContent = cat ? 'Edit Category' : 'Add Category';
+    document.getElementById('catFormId').value = cat ? cat.id : '';
+    document.getElementById('catFormName').value = cat ? cat.name : '';
+    document.getElementById('catFormDesc').value = cat ? (cat.description || '') : '';
+    document.getElementById('catFormIcon').value = cat ? (cat.icon || '') : '';
+    document.getElementById('catFormColor').value = cat ? (cat.color || '#58a6ff') : '#58a6ff';
+    if (cat) document.getElementById('catFormId').readOnly = true;
+    else document.getElementById('catFormId').readOnly = false;
+}
+
+function editCategory(id) {
+    const cat = repoData.categories.find(c => c.id === id);
+    if (cat) showCategoryForm(cat);
+}
+
+async function saveCategory(e) {
+    e.preventDefault();
+    const data = {
+        id: document.getElementById('catFormId').value.trim(),
+        name: document.getElementById('catFormName').value.trim(),
+        description: document.getElementById('catFormDesc').value.trim(),
+        icon: document.getElementById('catFormIcon').value.trim(),
+        color: document.getElementById('catFormColor').value
+    };
+
+    if (!data.id || !data.name) { alert('ID and Name are required.'); return; }
+
+    const idx = repoData.categories.findIndex(c => c.id === data.id);
+    if (idx >= 0) repoData.categories[idx] = data;
+    else repoData.categories.push(data);
+
+    try {
+        await pushAll(`${idx >= 0 ? 'Update' : 'Add'} category: ${data.name}`);
+        showPage('categories');
+        renderCategories();
+        populateCategoryDropdowns();
+        updateStats();
+    } catch (e) {
+        showAlert('dashboardAlert', 'Error: ' + e.message, 'error');
+    }
+}
+
+async function deleteCategory(id) {
+    const cat = repoData.categories.find(c => c.id === id);
+    if (!confirm(`Delete category "${cat ? cat.name : ''}"? Extensions will NOT be deleted.`)) return;
+    repoData.categories = repoData.categories.filter(c => c.id !== id);
+    try {
+        await pushAll(`Delete category: ${cat ? cat.name : ''}`);
+        renderCategories();
+        populateCategoryDropdowns();
+        updateStats();
+    } catch (e) {
+        showAlert('dashboardAlert', 'Error: ' + e.message, 'error');
+    }
+}
+
+// ====== UI ======
+function showPage(page) {
+    ['dashboard','extensions','extension-form','blog','blog-form','categories','category-form'].forEach(p => {
+        const el = document.getElementById('page-' + p);
+        if (el) el.classList.toggle('hidden', p !== page);
+    });
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    const navKey = page.replace('-form', '');
+    const nav = document.getElementById('nav-' + navKey);
+    if (nav) nav.classList.add('active');
+}
+
+function showLoading(text) {
+    document.getElementById('loadingText').textContent = text || 'Loading...';
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+function showAlert(elId, msg, type) {
+    const el = document.getElementById(elId);
+    el.innerHTML = '<div class="alert alert-' + type + '">' + escHtml(msg) + '</div>';
+    setTimeout(function() { el.innerHTML = ''; }, 5000);
+}
+
+function addCommitLog(msg, success) {
+    var log = document.getElementById('commitLog');
+    var time = new Date().toLocaleTimeString();
+    var cls = success ? 'success' : 'error';
+    var icon = success ? '&#10003;' : '&#10007;';
+    log.innerHTML = '<div class="' + cls + '">[' + time + '] ' + icon + ' ' + escHtml(msg) + '</div>' + log.innerHTML;
+}
+
+function escHtml(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function esc(s) { return escHtml(s); }
+function genId() { return Math.random().toString(36).substring(2, 14); }
+function lines(id) { return document.getElementById(id).value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean); }
+
+// Event delegation for table action buttons
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    var action = btn.getAttribute('data-action');
+    var id = btn.getAttribute('data-id');
+    if (action === 'edit-ext') editExtension(id);
+    else if (action === 'delete-ext') deleteExtension(id);
+    else if (action === 'edit-blog') editBlog(id);
+    else if (action === 'delete-blog') deleteBlog(id);
+    else if (action === 'edit-cat') editCategory(id);
+    else if (action === 'delete-cat') deleteCategory(id);
+});
+
+// ====== AUTH ======
+async function login() {
+    GH_TOKEN = document.getElementById('tokenInput').value.trim();
+    GH_REPO = document.getElementById('repoInput').value.trim();
+    if (!GH_TOKEN || !GH_REPO) { showAlert('loginAlert', 'Please enter both token and repository.', 'error'); return; }
+    GH_OWNER = GH_REPO.split('/')[0];
+    GH_REPO = GH_REPO.split('/')[1];
+
+    showLoading('Connecting to GitHub...');
+    try {
+        await ghFetch(`/repos/${GH_OWNER}/${GH_REPO}`);
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        localStorage.setItem('gh_token', GH_TOKEN);
+        localStorage.setItem('gh_repo', GH_OWNER + '/' + GH_REPO);
+        await pullData();
+    } catch (e) {
+        hideLoading();
+        showAlert('loginAlert', 'Connection failed: ' + e.message, 'error');
+    }
+}
+
+function logout() {
+    localStorage.removeItem('gh_token');
+    localStorage.removeItem('gh_repo');
+    location.reload();
+}
+
+// Auto-login if saved
+(function() {
+    const saved = localStorage.getItem('gh_token');
+    const savedRepo = localStorage.getItem('gh_repo');
+    if (saved) {
+        document.getElementById('tokenInput').value = saved;
+        if (savedRepo) document.getElementById('repoInput').value = savedRepo;
+        login();
+    }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# robots.txt for FileExt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://fileext.id/sitemap.xml
+
+# Disallow admin/pages that shouldn't be indexed
+Disallow: /js/
+Disallow: /css/
+
+# Crawl-delay (optional)
+Crawl-delay: 1
